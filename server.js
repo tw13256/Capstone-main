@@ -1,5 +1,5 @@
 const express = require("express");
-
+const fs = require("fs");
 const forge = require('node-forge')
     forge.options.usePureJavaScript = true
     var pki = forge.pki;
@@ -17,19 +17,19 @@ const forge = require('node-forge')
         value: 'lol.lol'
       }, {
         name: 'countryName',
-        value: 'US'
+        value: 'TW'
       }, {
         shortName: 'ST',
         value: 'Illinois'
       }, {
         name: 'localityName',
-        value: 'Downers Grove'
+        value: 'loli'
       }, {
         name: 'organizationName',
-        value: 'Test'
+        value: 'Loli'
       }, {
         shortName: 'OU',
-        value: 'Test'
+        value: 'Loli'
       }];
     cert.setSubject(attrs);
     cert.setIssuer(attrs);
@@ -81,6 +81,7 @@ const forge = require('node-forge')
     // console.log(private_key);
     fs.writeFileSync("private.pem",private_key)
     fs.writeFileSync("public.crt",public_key)
+    console.log("saved private_key, public_key.");
     
     
     const options = {
@@ -89,7 +90,6 @@ const forge = require('node-forge')
     };
     
 const app = express();
-const fs = require("fs");
 const server = require("https").Server(options, app);
 const io = require("socket.io")(server);
 const peer = require("peer");
