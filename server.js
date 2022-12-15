@@ -1,15 +1,104 @@
 const express = require("express");
+
+const forge = require('node-forge')
+    forge.options.usePureJavaScript = true
+    var pki = forge.pki;
+    var keys = pki.rsa.generateKeyPair(2048);
+    var cert = pki.createCertificate();
+    
+    cert.publicKey = keys.publicKey;
+    cert.serialNumber = '01';
+    cert.validity.notBefore = new Date();
+    cert.validity.notAfter = new Date();
+    cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear()+1);
+    
+    var attrs = [{
+        name: 'commonName',
+        value: 'lol.lol'
+      }, {
+        name: 'countryName',
+        value: 'US'
+      }, {
+        shortName: 'ST',
+        value: 'Illinois'
+      }, {
+        name: 'localityName',
+        value: 'Downers Grove'
+      }, {
+        name: 'organizationName',
+        value: 'Test'
+      }, {
+        shortName: 'OU',
+        value: 'Test'
+      }];
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
+    cert.setExtensions([{
+        name: 'basicConstraints',
+        cA: true
+      }, {
+        name: 'keyUsage',
+        keyCertSign: true,
+        digitalSignature: true,
+        nonRepudiation: true,
+        keyEncipherment: true,
+        dataEncipherment: true
+      }, {
+        name: 'extKeyUsage',
+        serverAuth: true,
+        clientAuth: true,
+        codeSigning: true,
+        emailProtection: true,
+        timeStamping: true
+      }, {
+        name: 'nsCertType',
+        client: true,
+        server: true,
+        email: true,
+        objsign: true,
+        sslCA: true,
+        emailCA: true,
+        objCA: true
+      }, {
+        name: 'subjectAltName',
+        altNames: [{
+          type: 6, // URI
+          value: 'http://lol.lol.lol'
+        }, {
+          type: 7, // IP
+          ip: '127.0.0.1'
+        }]
+      }, {
+        name: 'subjectKeyIdentifier'
+      }]);
+    cert.sign(keys.privateKey);
+    
+    var private_key = pki.privateKeyToPem(keys.privateKey);
+    var public_key = pki.certificateToPem(cert);
+    
+    // In case you need the newly generated keys displayed or saved
+    // console.log(public_key);
+    // console.log(private_key);
+    fs.writeFileSync("private.pem",private_key)
+    fs.writeFileSync("public.crt",public_key)
+    
+    
+    const options = {
+        key: private_key,
+        cert: public_key
+    };
+    
 const app = express();
 const fs = require("fs");
-const options = {
-  key: fs.readFileSync("key.pem"),
-  cert: fs.readFileSync("cert.pem"),
-  //可以考慮直接用node-forge來生
-};
 const server = require("https").Server(options, app);
 const io = require("socket.io")(server);
 const peer = require("peer");
 //const { v4: uuidV4 } = require('uuid')
+
+// const httpsServer = https.createServer({
+//   key: fs.readFileSync('server-key.pem'),
+//   cert: fs.readFileSync('server-cert.pem')
+// }, app)
 
 console.log("start server");
 app.set("view engine", "ejs");
